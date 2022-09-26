@@ -1,0 +1,3 @@
+__pycache__
+*.db
+qs_env/

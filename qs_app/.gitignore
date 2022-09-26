@@ -1,0 +1,5 @@
+qs_env
+*.bat
+*.pyc
+__pycache__
+
