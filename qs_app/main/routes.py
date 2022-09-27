@@ -1,8 +1,8 @@
 from multiprocessing.resource_tracker import main
 from flask import Blueprint, jsonify, request
 from ..models import Tracker, User, Card
-from qs_app import db
-from flask.json import JSONEncoder
+from qs_app import app, db
+from flask_swagger import swagger
 from ..utils import token_required
 def serialize_tracker(l):
     dic={}
@@ -32,11 +32,37 @@ main = Blueprint('main', __name__)
 
 @main.route("/", methods=['GET'])
 def home():
+    """
+    Home Route
+    ---
+    tags:
+        - main
+    responses:
+        200:
+            description: API is Running!
+    """
     return jsonify(message="Welcome to QS API!"), 200
+
+@main.route("/swagger")
+def get_swagger_docs():
+    """
+    Swagger Docs
+    ---
+    tags:
+        - main
+    responses:
+        200:
+            description: Swagger API Documentation.
+    """
+    swag = swagger(app)
+    swag['info']['version'] = "1.0"
+    swag['info']['title'] = "QS API"
+    return jsonify(swag)
 
 @main.route("/trackers", methods=['GET'])
 @token_required
 def get_tracker(user):
+    
     user_id = user["user_id"]
     tracker = Tracker.query.filter_by(user_id=user['user_id']).all()
     dic_tracker = serialize_tracker(tracker)
