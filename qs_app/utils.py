@@ -19,7 +19,6 @@ def token_required(f):
 
 def get_logged_in_user(new_request):
     auth_token = new_request.headers.get('Authorization')
-    print(auth_token)
     if auth_token:
         resp = User.decode_auth_token(auth_token)
         if not isinstance(resp, str):

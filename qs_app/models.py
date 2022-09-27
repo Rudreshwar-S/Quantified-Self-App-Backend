@@ -53,9 +53,6 @@ class User(db.Model):
     def __repr__(self):
         return "<User '{}'>".format(self.username)
 
-# class Traker(db.Model):
-#     __tablename__ = "traker"
-
 class Tracker(db.Model):
     __tablename__ = "tracker"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -63,3 +60,13 @@ class Tracker(db.Model):
     description = db.Column(db.String(255), nullable=False)
     tracker_type = db.Column(db.String(100), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),nullable=False)
+    cards = db.relationship('Card', backref='tracker', lazy=True)
+
+
+class Card(db.Model):
+    __tablename__ = "card"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    time_stamp = db.Column(db.String(50), unique=True)
+    value = db.Column(db.String(100), nullable=False)
+    note = db.Column(db.String(255), nullable=False)
+    tracker_id = db.Column(db.Integer, db.ForeignKey('tracker.id'),nullable=False)
