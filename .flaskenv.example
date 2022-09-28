@@ -1,0 +1,4 @@
+FLASK_APP=your_app_file
+REDIS_URL=your_redis_url
+MAIL_USERNAME=your_gmail_username
+MAIL_PASSWORD=your_gmail_password
