@@ -15,6 +15,15 @@ def serialize_tracker(l):
         dic[i]=dic2
     return dic
 
+def serialize_a_tracker(l):
+    dic={}
+    dic["id"]= l.id
+    dic["name"]= l.name
+    dic["description"]= l.description
+    dic["tracker_type"]= l.tracker_type
+    dic["user_id"]=l.user_id
+    return dic
+
 def serialize_cards(l):
     dic={}
     for i in range(len(l)):
@@ -62,11 +71,19 @@ def get_swagger_docs():
 @main.route("/trackers", methods=['GET'])
 @token_required
 def get_tracker(user):
-    
     user_id = user["user_id"]
     tracker = Tracker.query.filter_by(user_id=user['user_id']).all()
     dic_tracker = serialize_tracker(tracker)
     return jsonify(dic_tracker), 200
+
+@main.route("/trackers/<tracker_id>", methods=['GET'])
+@token_required
+def get_a_tracker(user, tracker_id):
+    tracker = Tracker.query.filter_by(id=tracker_id).first()
+    if user["user_id"]!=tracker.user_id:
+        return "Unauthorized", 401
+    ser_tracker = serialize_a_tracker(tracker)
+    return jsonify(ser_tracker), 200
 
 
 @main.route("/trackers", methods=['POST'])
