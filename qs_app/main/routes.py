@@ -1,7 +1,7 @@
 from multiprocessing.resource_tracker import main
 from flask import Blueprint, jsonify, request
 from ..models import Tracker, User, Card
-from qs_app import app, db
+from qs_app import app, db, redis_client
 from flask_swagger import swagger
 from ..utils import token_required
 def serialize_tracker(l):
@@ -51,6 +51,16 @@ def home():
             description: API is Running!
     """
     return jsonify(message="Welcome to QS API!"), 200
+
+@main.route("/user-count", methods=['GET'])
+def get_user_count():
+    user_count = redis_client.get('user_count')
+    if redis_client.get('user_count'):
+        return jsonify(message=f"We have {int(user_count)} users and counting - from Redis")
+    else:
+        user_count = User.query.count()
+        redis_client.set('user_count', user_count)
+        return jsonify(message=f"We have {int(user_count)} users and counting - from database")
 
 @main.route("/swagger")
 def get_swagger_docs():
