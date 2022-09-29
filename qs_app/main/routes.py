@@ -81,6 +81,15 @@ def get_swagger_docs():
 @main.route("/trackers", methods=['GET'])
 @token_required
 def get_tracker(user):
+    """
+    Get Trackers List
+    ---
+    tags:
+        - main
+    responses:
+        200:
+            description: All Trackers Fetched
+    """
     user_id = user["user_id"]
     tracker = Tracker.query.filter_by(user_id=user['user_id']).all()
     dic_tracker = serialize_tracker(tracker)
@@ -89,16 +98,56 @@ def get_tracker(user):
 @main.route("/trackers/<tracker_id>", methods=['GET'])
 @token_required
 def get_a_tracker(user, tracker_id):
+    """
+    Get Tracker by ID
+    ---
+    tags:
+        - main
+    responses:
+        200:
+            description:  Tracker Fetched
+    """
     tracker = Tracker.query.filter_by(id=tracker_id).first()
     if user["user_id"]!=tracker.user_id:
         return "Unauthorized", 401
     ser_tracker = serialize_a_tracker(tracker)
     return jsonify(ser_tracker), 200
 
+@main.route("/trackers/<tracker_id>", methods=['PUT'])
+@token_required
+def update_tracker(user, tracker_id):
+    """
+    Update Tracker by ID
+    ---
+    tags:
+        - main
+    responses:
+        200:
+            description: Tracker Updated
+    """
+    request_data = request.get_json()
+    tracker = Tracker.query.filter_by(id=tracker_id).first()
+    if user["user_id"]!=tracker.user_id:
+        return "Unauthorized", 401
+    tracker.name = request_data['name']
+    tracker.description = request_data['description']
+    ser_tracker = serialize_a_tracker(tracker)
+    db.session.commit()
+    return jsonify(ser_tracker), 200
+
 
 @main.route("/trackers", methods=['POST'])
 @token_required
 def create_tracker(current_user):
+    """
+    Create a New Tracker
+    ---
+    tags:
+        - main
+    responses:
+        200:
+            description: New Tracker Created
+    """
     request_data = request.get_json()
     tracker_name = request_data['name']
     tracker_desc = request_data['description']
@@ -112,6 +161,15 @@ def create_tracker(current_user):
 @main.route("/trackers", methods=['DELETE'])
 @token_required
 def del_tracker(user):
+    """
+    Delete a Tracker by ID
+    ---
+    tags:
+        - main
+    responses:
+        200:
+            description: Tracker Deleted
+    """
     request_data = request.get_json()
     tracker_id = request_data['id']
     tracker = Tracker.query.filter_by(id=tracker_id).first()
@@ -122,11 +180,19 @@ def del_tracker(user):
 @main.route("/tracker/<tracker_id>", methods=['POST'])
 @token_required
 def create_card(user, tracker_id):
+    """
+    Create a Card Using Tracker ID
+    ---
+    tags:
+        - main
+    responses:
+        200:
+            description: Card Created
+    """
     tracker = Tracker.query.filter_by(id=tracker_id).first()
     if user["user_id"]!=tracker.user_id:
         return "Unauthorized", 401
-    request_data = request.get_json()
-    # tracker_id = tracker_id["tracker_id"]    
+    request_data = request.get_json()  
     card_time = request_data['time_stamp']
     card_value = request_data['value']
     card_note = request_data['note']
@@ -140,6 +206,15 @@ def create_card(user, tracker_id):
 @main.route("/tracker/<tracker_id>", methods=['GET'])
 @token_required
 def get_card(user, tracker_id):
+    """
+    Get all Cards Using Tracker ID
+    ---
+    tags:
+        - main
+    responses:
+        200:
+            description: Cards Fetched
+    """
     tracker = Tracker.query.filter_by(id=tracker_id).first()
     if user["user_id"]!=tracker.user_id:
         return "Unauthorized", 401
@@ -151,13 +226,21 @@ def get_card(user, tracker_id):
 @main.route("/tracker/<tracker_id>", methods=['DELETE'])
 @token_required
 def delete_card(user, tracker_id):
+    """
+    Delete a Card Using Card ID
+    ---
+    tags:
+        - main
+    responses:
+        200:
+            description: Card Deleted
+    """
     tracker = Tracker.query.filter_by(id=tracker_id).first()
     if user["user_id"]!=tracker.user_id:
         return "Unauthorized", 401
     request_data = request.get_json()
     card_id = request_data['id']
     cards =  Card.query.filter_by(id=card_id).first()
-    print("Heloooooooooooooo",cards)
     db.session.delete(cards)
     db.session.commit()
     return jsonify(message="success"), 200
