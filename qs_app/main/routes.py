@@ -1,9 +1,10 @@
-from multiprocessing.resource_tracker import main
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from ..models import Tracker, User, Card
 from qs_app import app, db, redis_client
 from flask_swagger import swagger
-from ..utils import token_required
+from ..utils import token_required, export_csv_data, create_report
+
+
 def serialize_tracker(l):
     dic={}
     for i in range(len(l)):
@@ -244,3 +245,50 @@ def delete_card(user, tracker_id):
     db.session.delete(cards)
     db.session.commit()
     return jsonify(message="success"), 200
+
+@main.route("/export_csv", methods=['GET'])
+@token_required
+def create_csv_export(user):
+    # task = export_csv_data.apply_async(args=[user['user_id']], queue='myapp')
+    # return jsonify({'status': url_for('main.create_csv_export_status', request_id=task.id)}), 202
+    filename = export_csv_data(user['user_id'])
+    return jsonify({'filename': filename})
+
+@main.route("/create_report", methods=['GET'])
+@token_required
+def create_progress_report(user):
+    filename = create_report(user['user_id'])
+    return jsonify({'filename': filename})
+
+@main.route("/download_file/<filename>", methods=['GET'])
+def download_csv_export(filename):
+    return send_file(f'../temp/{filename}', as_attachment=True)
+
+# @main.route("/export_csv_status/<request_id>", methods=['GET'])
+# @token_required
+# def create_csv_export_status(user, request_id):
+#     task = export_csv_data.AsyncResult(request_id)
+#     if task.state == 'PENDING':
+#         response = {
+#             'state': task.state,
+#             'current': 0,
+#             'total': 1,
+#             'status': 'Pending...'
+#         }
+#     elif task.state != 'FAILURE':
+#         response = {
+#             'state': task.state,
+#             'current': task.info.get('current', 0),
+#             'total': task.info.get('total', 1),
+#             'status': task.info.get('status', '')
+#         }
+#         if 'result' in task.info:
+#             response['result'] = task.info['result']
+#     else:
+#         response = {
+#             'state': task.state,
+#             'current': 1,
+#             'total': 1,
+#             'status': str(task.info),
+#         }
+#     return jsonify(response)
