@@ -1,4 +1,5 @@
 import csv
+import shortuuid
 from functools import wraps
 from http.client import ImproperConnectionState
 from urllib.parse import uses_relative
@@ -79,19 +80,22 @@ def send_reminder_emails():
             }
             send_async_email(email_data)
 
-@celery.task
+@celery.task()
 def export_csv_data(user_id):
     trackers = Tracker.query.filter_by(user_id=user_id).all()
     
     header = ['name', 'description', 'type', 'number_of_cards']
 
-    with open(f'temp/{user_id}.csv', 'w', newline='') as csvfile:
+    filename = shortuuid.uuid()
+    with open(f'temp/{filename}.csv', 'w', newline='') as csvfile:
         writer  = csv.writer(csvfile)
         writer.writerow(header)
         for tracker in trackers:
             card_count = Card.query.filter_by(tracker_id=tracker.id).count()
             data = [tracker.name, tracker.description, tracker.tracker_type, card_count]
             writer.writerow(data)
+    
+    return f'{filename}.csv'
 
 @celery.task
 def create_report(user_id):
@@ -114,10 +118,11 @@ def create_report(user_id):
         tracker_data=tracker_data,
     )
 
-    
-    with open(f'temp/{user_id}_report.html', 'w') as f:
+    filename = shortuuid.uuid()
+    with open(f'temp/{filename}_report.html', 'w') as f:
         f.write(html)
-        
+    
+    return f'{filename}_report.html'
 
 
 
