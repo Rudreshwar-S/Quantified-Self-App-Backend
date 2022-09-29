@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/chota@latest">
+    <title>Progress Report</title>
+</head>
+
+<body>
+    <nav class="nav" style="background-color: rgb(143, 215, 197);">
+        <div class="nav-center">
+            <a class="brand">
+                Quantified Self - Progress Report
+            </a>
+        </div>
+    </nav>
+
+    <div class="card">
+        <header>
+            <h4>User</h4>
+        </header>
+        <span>{{ username }}</span><br>
+        <span>{{ email }}</span><br>
+        <span># of Trackers: {{ tracker_count }}</span><br>
+    </div>
+    <div class="card" style="margin: 2rem;">
+        <header>
+            <h4>Trackers</h4>
+        </header>
+        {% for data in tracker_data %}
+        <div class="card">
+            <span>Tracker Name: {{ data[0] }}</span><br>
+            <span>Tracker Description: {{ data[1] }}</span><br>
+            <span>Tracker Type: {{ data[2] }}</span><br>
+            <span>No of Logs: {{ data[3] }}</span><br>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+
+</html>

@@ -1,10 +1,13 @@
+import csv
 from functools import wraps
 from http.client import ImproperConnectionState
+from urllib.parse import uses_relative
 from flask import request
 from qs_app import app, celery, mail
 from flask_mail import Message
 from .models import Tracker, User, Card
 from datetime import datetime
+from jinja2 import Environment, FileSystemLoader
 
 def token_required(f):
     @wraps(f)
@@ -75,3 +78,46 @@ def send_reminder_emails():
                 'body': f"Please visit Quantified Self webapp to create today\'s log for {tracker.name}"
             }
             send_async_email(email_data)
+
+@celery.task
+def export_csv_data(user_id):
+    trackers = Tracker.query.filter_by(user_id=user_id).all()
+    
+    header = ['name', 'description', 'type', 'number_of_cards']
+
+    with open(f'temp/{user_id}.csv', 'w', newline='') as csvfile:
+        writer  = csv.writer(csvfile)
+        writer.writerow(header)
+        for tracker in trackers:
+            card_count = Card.query.filter_by(tracker_id=tracker.id).count()
+            data = [tracker.name, tracker.description, tracker.tracker_type, card_count]
+            writer.writerow(data)
+
+@celery.task
+def create_report(user_id):
+    env = Environment(loader=FileSystemLoader('qs_app/templates'))
+    template = env.get_template('report.html')
+
+    user = User.query.filter_by(id=user_id).first()
+    tracker_count = Tracker.query.filter_by(user_id=user_id).count()
+    trackers = Tracker.query.filter_by(user_id=user_id).all()
+
+    tracker_data = []
+    for tracker in trackers:
+        card_count = Card.query.filter_by(tracker_id=tracker.id).count()
+        tracker_data.append([tracker.name, tracker.description, tracker.tracker_type, card_count])
+
+    html = template.render(
+        username=user.name,
+        email=user.email,
+        tracker_count=tracker_count,
+        tracker_data=tracker_data,
+    )
+
+    
+    with open(f'temp/{user_id}_report.html', 'w') as f:
+        f.write(html)
+        
+
+
+
